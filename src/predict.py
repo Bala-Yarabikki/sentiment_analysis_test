@@ -45,7 +45,7 @@ def main(_):
         test_file = FLAGS.test_file
     if FLAGS.model_path:
         model_path = FLAGS.model_path
-    df_test = pd.read_csv(test_file).fillna("none")
+    df_test = pd.read_csv("./data/tests.csv")
 
     logger.info(f"Bert Model: {config.BERT_PATH}")
     logger.info(
