@@ -54,8 +54,8 @@ def main(_):
     logger.info(f"Test size : {len(df_test):.4f}")
 
     test_dataset = dataset.BERTDataset(
-        review=df_test.text.values,
-        target=df_test.label.values)
+        content=df_test.content.values,
+        sentiment=df_test.sentiment.values)
 
     test_data_loader = torch.utils.data.DataLoader(
         test_dataset,
