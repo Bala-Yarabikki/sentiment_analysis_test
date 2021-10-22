@@ -6,7 +6,6 @@ import engine
 import torch
 import pandas as pd
 import numpy as np
-# from torch.utils.data import Dataset
 from model import BERTBaseUncased
 from sklearn import model_selection
 from sklearn import metrics
@@ -86,20 +85,15 @@ def run():
             nd in n for nd in no_decay)], 'weight_decay': 0.0},
     ]
 
-    num_train_steps = int(
-        len(df_train) / config.TRAIN_BATCH_SIZE * config.EPOCHS)
+    num_train_steps = int(len(df_train) / config.TRAIN_BATCH_SIZE * config.EPOCHS)
     optimizer = AdamW(optimizer_parameters, lr=3e-5)
     scheduler = get_linear_schedule_with_warmup(
-        optimizer,
-        num_warmup_steps=0,
-        num_training_steps=num_train_steps)
-
+        optimizer, num_warmup_steps=0, num_training_steps=num_train_steps)
     # model = nn.DataParallel(model)
 
     best_accuracy = 0
     for epoch in range(config.EPOCHS):
         logger.info(f"epoch={epoch}")
-
         train_loss, train_acc = engine.train_fn(
             train_data_loader, model, optimizer, device, scheduler)
 

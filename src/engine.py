@@ -31,7 +31,7 @@ def train_fn(data_loader, model, optimizer, device, scheduler):
         optimizer.step()
         scheduler.step()
         train_loss += loss.item()
-        pred_labels = torch.argmax(outputs, dim=1)
+        # pred_labels = torch.argmax(outputs, dim=1)
         # (pred_labels == targets).sum().item()
         train_acc += categorical_accuracy(outputs, targets).item()
 
@@ -57,13 +57,10 @@ def eval_fn(data_loader, model, device):
             mask = mask.to(device, dtype=torch.long)
             targets = targets.to(device, dtype=torch.long)
 
-            outputs = model(
-                ids=ids,
-                mask=mask,
-                token_type_ids=token_type_ids)
+            outputs = model(ids=ids, mask=mask, token_type_ids=token_type_ids)
             loss = loss_fn(outputs, targets)
             eval_loss += loss.item()
-            pred_labels = torch.argmax(outputs, axis=1)
+            # pred_labels = torch.argmax(outputs, axis=1)
             # (pred_labels == targets).sum().item()
             eval_acc += categorical_accuracy(outputs, targets).item()
             fin_targets.extend(targets.cpu().detach().numpy().tolist())
@@ -95,7 +92,5 @@ def predict_fn(data_loader, model, device, extract_features=False):
                 extracted_features.extend(model.extract_features(ids=ids, mask=mask,
                                                                  token_type_ids=token_type_ids).cpu().detach().numpy().tolist())
 
-            fin_outputs.extend(torch.argmax(
-                outputs, dim=1).cpu().detach().numpy().tolist())
-
+            fin_outputs.extend(torch.argmax(outputs, dim=1).cpu().detach().numpy().tolist())
     return fin_outputs, extracted_features
