@@ -1,5 +1,4 @@
 import torch
-import config
 
 
 def categorical_accuracy(preds, y):
