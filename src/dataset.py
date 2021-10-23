@@ -3,21 +3,21 @@ import torch
 
 
 class BERTDataset:
-    def __init__(self, content, sentiment):
-        self.content = content
-        self.sentiment = sentiment
+    def __init__(self, review, target):
+        self.review = review
+        self.target = target
         self.tokenizer = config.TOKENIZER
         self.max_len = config.MAX_LEN
 
     def __len__(self):
-        return len(self.content)
+        return len(self.review)
 
     def __getitem__(self, item):
-        content = str(self.content[item])
-        content = " ".join(content.split())
+        review = str(self.review[item])
+        review = " ".join(review.split())
 
         inputs = self.tokenizer.encode_plus(
-            content,
+            review,
             None,
             add_special_tokens=True,
             max_length=self.max_len, truncation=True)
@@ -35,5 +35,5 @@ class BERTDataset:
             'ids': torch.tensor(ids, dtype=torch.long),
             'mask': torch.tensor(mask, dtype=torch.long),
             'token_type_ids': torch.tensor(token_type_ids, dtype=torch.long),
-            'sentiments': torch.tensor(self.sentiment[item], dtype=torch.float)
+            'targets': torch.tensor(self.target[item], dtype=torch.float)
         }

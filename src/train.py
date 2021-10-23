@@ -29,6 +29,19 @@ def run():
     dfx = pd.read_csv('./data/train.csv')
     df_train, df_test = model_selection.train_test_split(dfx, test_size=0.2, random_state=42)
     df_valid, df_test = model_selection.train_test_split(dfx, test_size=0.2, random_state=42)
+
+    def making_label(st):
+        if st == 'positive':
+            return 1
+        elif st == 'neutral':
+            return 0
+        else:
+            return 2
+
+    df_train['sentiment'] = df_train['sentiment'].apply(making_label)
+    df_test['sentiment'] = df_test['sentiment'].apply(making_label)
+    df_valid['sentiment'] = df_test['sentiment'].apply(making_label)
+
     df_train = df_train.reset_index(drop=True)
     df_test = df_train.reset_index(drop=True)
     df_valid = df_valid.reset_index(drop=True)
@@ -43,8 +56,8 @@ def run():
     logger.info(f"Test size : {len(df_test):.4f}")
 
     train_dataset = dataset.BERTDataset(
-        content=df_train.content.values,
-        sentiment=df_train.sentiment.values
+        review=df_train.content.values,
+        target=df_train.sentiment.values
     )
 
     train_data_loader = torch.utils.data.DataLoader(
@@ -54,8 +67,8 @@ def run():
     )
 
     valid_dataset = dataset.BERTDataset(
-        content=df_valid.content.values,
-        sentiment=df_valid.sentiment.values
+        review=df_valid.content.values,
+        target=df_valid.sentiment.values
     )
 
     valid_data_loader = torch.utils.data.DataLoader(
@@ -65,8 +78,8 @@ def run():
     )
 
     test_dataset = dataset.BERTDataset(
-        content=df_test.content.values,
-        sentiment=df_test.sentiment.values
+        review=df_test.content.values,
+        target=df_test.sentiment.values
     )
 
     test_data_loader = torch.utils.data.DataLoader(
@@ -75,7 +88,7 @@ def run():
         num_workers=1
     )
 
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu') #torch.device("cuda")
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')  # torch.device("cuda")
     model = BERTBaseUncased()
     model.to(device)
 
@@ -110,33 +123,33 @@ def run():
             if parm.grad is not None:
                 writer.add_histogram(tag, parm.grad.data.cpu().numpy(), epoch)
 
-        outputs, sentiments, val_loss, val_acc = engine.eval_fn(
+        outputs, targets, val_loss, val_acc = engine.eval_fn(
             valid_data_loader, model, device)
-        val_mcc = metrics.matthews_corrcoef(outputs, sentiments)
+        val_mcc = metrics.matthews_corrcoef(outputs, targets)
         logger.info(f"val_MCC_Score = {val_mcc:.3f}")
 
-        outputs, sentiments, test_loss, test_acc = engine.eval_fn(
+        outputs, targets, test_loss, test_acc = engine.eval_fn(
             test_data_loader, model, device)
-        test_mcc = metrics.matthews_corrcoef(outputs, sentiments)
+        test_mcc = metrics.matthews_corrcoef(outputs, targets)
         logger.info(f"test_MCC_Score = {test_mcc:.3f}")
 
         logger.info(
             f"train_loss={train_loss:.4f}, val_loss={val_loss:.4f}, test_loss={test_loss:.4f}")
-        writer.add_scalar('loss/train', train_loss, epoch) # data grouping by `slash`
-        writer.add_scalar('loss/val', val_loss, epoch) # data grouping by `slash`
-        writer.add_scalar('loss/test', test_loss, epoch) # data grouping by `slash`
+        writer.add_scalar('loss/train', train_loss, epoch)  # data grouping by `slash`
+        writer.add_scalar('loss/val', val_loss, epoch)  # data grouping by `slash`
+        writer.add_scalar('loss/test', test_loss, epoch)  # data grouping by `slash`
 
         logger.info(
             f"train_acc={train_acc:.3f}, val_acc={val_acc:.3f}, test_acc={test_acc:.3f}")
-        writer.add_scalar('acc/train', train_acc, epoch) # data grouping by `slash`
-        writer.add_scalar('acc/val', val_acc, epoch) # data grouping by `slash`
-        writer.add_scalar('acc/test', test_acc, epoch) # data grouping by `slash`
+        writer.add_scalar('acc/train', train_acc, epoch)  # data grouping by `slash`
+        writer.add_scalar('acc/val', val_acc, epoch)  # data grouping by `slash`
+        writer.add_scalar('acc/test', test_acc, epoch)  # data grouping by `slash`
 
         logger.info(f"val_mcc={val_acc:.3f}, test_mcc={test_acc:.3f}")
-        writer.add_scalar('mcc/val', val_mcc, epoch) # data grouping by `slash`
-        writer.add_scalar('mcc/test', test_mcc, epoch) # data grouping by `slash`
+        writer.add_scalar('mcc/val', val_mcc, epoch)  # data grouping by `slash`
+        writer.add_scalar('mcc/test', test_mcc, epoch)  # data grouping by `slash`
 
-        accuracy = metrics.accuracy_score(sentiments, outputs)
+        accuracy = metrics.accuracy_score(targets, outputs)
         logger.info(f"Accuracy Score = {accuracy:.3f}")
 
         if accuracy > best_accuracy:
